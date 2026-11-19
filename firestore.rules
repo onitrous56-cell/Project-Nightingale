@@ -1,0 +1,501 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default-Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Global Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidRemoteCode(code) {
+      return code is string && code.size() == 8 && code.matches('^[A-Z0-9]{8}$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function parentUserExists(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId));
+    }
+
+    // 3. Entity Validation Blueprints (No existing() or diff() inside validators)
+    function isValidUserAccount(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'role', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'role', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.uid == request.auth.uid
+        && data.uid == userId
+        && data.uid.size() >= 1 && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.displayName is string
+        && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.role in ['caregiver', 'patient']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCaregiverProfile(data) {
+      return data.keys().hasAll([
+          'ownerId', 'pin', 'fullName', 'age', 'bloodType', 'allergiesAndNotes',
+          'caregiverName', 'caregiverPhone', 'alertEmail', 'avatarDataUrl',
+          'disabilities', 'enabledModules', 'simplifiedMode', 'lowStimulationMode',
+          'enable3DBackground', 'childFriendlyMode', 'backgroundGuardianEnabled',
+          'fallGThreshold', 'inactivitySeconds', 'soundThresholdDb',
+          'accidentFreeDays', 'streakLastResetIso', 'termsAcceptedAtIso',
+          'adultCaregiverConfirmed', 'remoteAccessCode',
+          'theme', 'textSize', 'voiceSpeed',
+          'aiAssistantNickname', 'talkBackEnabled', 'voicePersona',
+          'liveWallpaperType', 'floatingAiEnabled',
+          'preferredLanguage', 'smartBatterySaverEnabled', 'batterySaverThreshold',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'pin', 'fullName', 'age', 'bloodType', 'allergiesAndNotes',
+          'caregiverName', 'caregiverPhone', 'alertEmail', 'avatarDataUrl',
+          'disabilities', 'enabledModules', 'simplifiedMode', 'lowStimulationMode',
+          'enable3DBackground', 'childFriendlyMode', 'backgroundGuardianEnabled',
+          'fallGThreshold', 'inactivitySeconds', 'soundThresholdDb',
+          'accidentFreeDays', 'streakLastResetIso', 'termsAcceptedAtIso',
+          'adultCaregiverConfirmed', 'remoteAccessCode',
+          'theme', 'textSize', 'voiceSpeed',
+          'aiAssistantNickname', 'talkBackEnabled', 'voicePersona',
+          'liveWallpaperType', 'floatingAiEnabled',
+          'preferredLanguage', 'smartBatterySaverEnabled', 'batterySaverThreshold',
+          'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.pin is string
+        && data.pin.size() == 4
+        && data.pin.matches('^[0-9]{4}$')
+        && data.fullName is string && data.fullName.size() <= 120
+        && data.age is string && data.age.size() <= 16
+        && data.bloodType is string && data.bloodType.size() <= 16
+        && data.allergiesAndNotes is string && data.allergiesAndNotes.size() <= 1000
+        && data.caregiverName is string && data.caregiverName.size() <= 120
+        && data.caregiverPhone is string && data.caregiverPhone.size() <= 40
+        && data.alertEmail is string && data.alertEmail.size() <= 160
+        && data.avatarDataUrl is string && data.avatarDataUrl.size() <= 100000
+        && data.disabilities is list
+        && data.disabilities.size() <= 25
+        && (data.disabilities.size() == 0 || data.disabilities[0] is string)
+        && data.enabledModules is list
+        && data.enabledModules.size() >= 1
+        && data.enabledModules.size() <= 25
+        && data.enabledModules[0] is string
+        && data.simplifiedMode is bool
+        && data.lowStimulationMode is bool
+        && data.enable3DBackground is bool
+        && data.childFriendlyMode is bool
+        && data.backgroundGuardianEnabled is bool
+        && data.fallGThreshold is number && data.fallGThreshold >= 1.0 && data.fallGThreshold <= 6.0
+        && data.inactivitySeconds is int && data.inactivitySeconds >= 10 && data.inactivitySeconds <= 3600
+        && data.soundThresholdDb is int && data.soundThresholdDb >= 30 && data.soundThresholdDb <= 120
+        && data.accidentFreeDays is int && data.accidentFreeDays >= 0 && data.accidentFreeDays <= 36500
+        && data.streakLastResetIso is string && data.streakLastResetIso.size() <= 40
+        && data.termsAcceptedAtIso is string && data.termsAcceptedAtIso.size() <= 40
+        && data.adultCaregiverConfirmed is bool
+        && data.remoteAccessCode is string && data.remoteAccessCode.size() <= 16
+        && data.theme in ['dark', 'high-contrast', 'cream', 'neon', 'liquid-glass', 'cyber-teal', 'calm-lavender', 'solar-gold']
+        && data.textSize in ['normal', 'xl']
+        && data.voiceSpeed is number && data.voiceSpeed >= 0.5 && data.voiceSpeed <= 2.0
+        && data.aiAssistantNickname is string && data.aiAssistantNickname.size() <= 40
+        && data.talkBackEnabled is bool
+        && data.voicePersona in ['natural-female', 'natural-male', 'human-warm', 'human-gentle', 'robotic', 'system']
+        && data.liveWallpaperType in ['aurora-waves', 'liquid-glass', 'cosmic-orbs', 'astrolabe', 'off']
+        && data.floatingAiEnabled is bool
+        && data.preferredLanguage in ['en-US', 'ml-IN', 'hi-IN', 'ta-IN', 'kn-IN', 'te-IN', 'es-ES', 'fr-FR', 'ar-SA']
+        && data.smartBatterySaverEnabled is bool
+        && data.batterySaverThreshold is int && data.batterySaverThreshold >= 5 && data.batterySaverThreshold <= 50
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStressLog(data) {
+      return data.keys().hasAll([
+          'ownerId', 'stressScore', 'mood', 'mentalStatus', 'triggerNote', 'copingAction', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'stressScore', 'mood', 'mentalStatus', 'triggerNote', 'copingAction', 'createdAt'
+        ])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.stressScore is int && data.stressScore >= 1 && data.stressScore <= 10
+        && data.mood in ['calm', 'focused', 'anxious', 'overwhelmed', 'fatigued', 'happy', 'sad']
+        && data.mentalStatus in ['stable', 'elevated_stress', 'sensory_overload', 'panic_risk', 'fatigued']
+        && data.triggerNote is string && data.triggerNote.size() <= 400
+        && data.copingAction is string && data.copingAction.size() <= 120
+        && data.createdAt is timestamp;
+    }
+
+    function isValidSosEvent(data) {
+      return data.keys().hasAll([
+          'ownerId', 'reason', 'peakG', 'status', 'lat', 'lng', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'reason', 'peakG', 'status', 'lat', 'lng', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.reason is string && data.reason.size() >= 1 && data.reason.size() <= 200
+        && data.peakG is number && data.peakG >= 0.0 && data.peakG <= 50.0
+        && data.status in ['active', 'canceled', 'dispatched']
+        && data.lat is number && data.lat >= -90.0 && data.lat <= 90.0
+        && data.lng is number && data.lng >= -180.0 && data.lng <= 180.0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidChatMessage(data) {
+      return data.keys().hasAll(['ownerId', 'role', 'persona', 'text', 'modelUsed', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'role', 'persona', 'text', 'modelUsed', 'createdAt'])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.role in ['user', 'assistant']
+        && data.persona in ['calm_coach', 'caregiver_guide', 'cognitive_tutor', 'accessibility_advisor']
+        && data.text is string && data.text.size() >= 1 && data.text.size() <= 6000
+        && data.modelUsed is string && data.modelUsed.size() >= 1 && data.modelUsed.size() <= 64
+        && data.createdAt is timestamp;
+    }
+
+    function isValidRemoteLink(data) {
+      return data.keys().hasAll([
+          'ownerId', 'patientAlias', 'lat', 'lng', 'gpsConsentActive',
+          'accidentFreeDays', 'latestStressScore', 'latestMood', 'latestSosStatus',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'patientAlias', 'lat', 'lng', 'gpsConsentActive',
+          'accidentFreeDays', 'latestStressScore', 'latestMood', 'latestSosStatus',
+          'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.patientAlias is string && data.patientAlias.size() >= 1 && data.patientAlias.size() <= 60
+        && data.lat is number && data.lat >= -90.0 && data.lat <= 90.0
+        && data.lng is number && data.lng >= -180.0 && data.lng <= 180.0
+        && data.gpsConsentActive is bool
+        && data.accidentFreeDays is int && data.accidentFreeDays >= 0 && data.accidentFreeDays <= 36500
+        && data.latestStressScore is int && data.latestStressScore >= 1 && data.latestStressScore <= 10
+        && data.latestMood in ['calm', 'focused', 'anxious', 'overwhelmed', 'fatigued', 'happy', 'sad']
+        && data.latestSosStatus in ['monitoring', 'countdown', 'dispatched']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPhotoMemory(data) {
+      return data.keys().hasAll([
+          'ownerId', 'title', 'caption', 'category', 'imageDataUrl', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'title', 'caption', 'category', 'imageDataUrl', 'createdAt'
+        ])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 120
+        && data.caption is string && data.caption.size() <= 500
+        && data.category in ['family', 'home', 'caregiver', 'place', 'other']
+        && data.imageDataUrl is string && data.imageDataUrl.size() >= 1 && data.imageDataUrl.size() <= 100000
+        && data.createdAt is timestamp;
+    }
+
+    function isValidMemoryReminder(data) {
+      return data.keys().hasAll([
+          'ownerId', 'title', 'notes', 'timeSlot', 'confirmationMessage',
+          'lastCompletedDate', 'lastCompletedTimeLabel', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'title', 'notes', 'timeSlot', 'confirmationMessage',
+          'lastCompletedDate', 'lastCompletedTimeLabel', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 140
+        && data.notes is string && data.notes.size() <= 300
+        && data.timeSlot in ['morning', 'afternoon', 'evening', 'anytime']
+        && data.confirmationMessage is string && data.confirmationMessage.size() <= 240
+        && data.lastCompletedDate is string && data.lastCompletedDate.size() <= 20
+        && data.lastCompletedTimeLabel is string && data.lastCompletedTimeLabel.size() <= 40
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // 4. Collection Match Blocks
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserAccount(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserAccount(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'updatedAt']);
+      allow delete: if isVerifiedUser() && isValidId(userId) && isOwner(userId);
+
+      // Private Caregiver & Patient Profile Settings (PII-isolated)
+      match /settings/{settingId} {
+        allow get: if isSignedIn()
+          && isValidId(userId)
+          && isValidId(settingId)
+          && settingId == 'caregiverProfile'
+          && isOwner(userId);
+        allow list: if false;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(settingId)
+          && settingId == 'caregiverProfile'
+          && isOwner(userId)
+          && isValidCaregiverProfile(incoming())
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && parentUserExists(userId);
+        allow update: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(settingId)
+          && settingId == 'caregiverProfile'
+          && isOwner(userId)
+          && isValidCaregiverProfile(incoming())
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'pin', 'fullName', 'age', 'bloodType', 'allergiesAndNotes',
+              'caregiverName', 'caregiverPhone', 'alertEmail', 'avatarDataUrl',
+              'disabilities', 'enabledModules', 'simplifiedMode', 'lowStimulationMode',
+              'enable3DBackground', 'childFriendlyMode', 'backgroundGuardianEnabled',
+              'fallGThreshold', 'inactivitySeconds', 'soundThresholdDb',
+              'accidentFreeDays', 'streakLastResetIso', 'termsAcceptedAtIso',
+              'adultCaregiverConfirmed', 'remoteAccessCode',
+              'theme', 'textSize', 'voiceSpeed',
+              'aiAssistantNickname', 'talkBackEnabled', 'voicePersona',
+              'liveWallpaperType', 'floatingAiEnabled',
+              'preferredLanguage', 'smartBatterySaverEnabled', 'batterySaverThreshold',
+              'updatedAt'
+            ])
+          )
+          && parentUserExists(userId);
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(settingId)
+          && isOwner(userId);
+      }
+
+      // Mental Status & Stress Logs
+      match /stressLogs/{logId} {
+        allow get: if isSignedIn()
+          && isValidId(userId)
+          && isValidId(logId)
+          && isOwner(userId);
+        allow list: if isSignedIn()
+          && isOwner(userId)
+          && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(logId)
+          && isOwner(userId)
+          && isValidStressLog(incoming())
+          && incoming().createdAt == request.time
+          && parentUserExists(userId);
+        allow update: if false;
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(logId)
+          && isOwner(userId)
+          && parentUserExists(userId);
+      }
+
+      // Fall Guardian & Safety SOS Events (with Terminal State Locking)
+      match /sosEvents/{eventId} {
+        allow get: if isSignedIn()
+          && isValidId(userId)
+          && isValidId(eventId)
+          && isOwner(userId);
+        allow list: if isSignedIn()
+          && isOwner(userId)
+          && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(eventId)
+          && isOwner(userId)
+          && isValidSosEvent(incoming())
+          && incoming().status == 'active'
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && parentUserExists(userId);
+        allow update: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(eventId)
+          && isOwner(userId)
+          && isValidSosEvent(incoming())
+          && existing().status == 'active'
+          && incoming().status in ['canceled', 'dispatched']
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          && parentUserExists(userId);
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(eventId)
+          && isOwner(userId);
+      }
+
+      // Multi-Turn Gemini AI Conversation History
+      match /chatMessages/{messageId} {
+        allow get: if isSignedIn()
+          && isValidId(userId)
+          && isValidId(messageId)
+          && isOwner(userId);
+        allow list: if isSignedIn()
+          && isOwner(userId)
+          && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(messageId)
+          && isOwner(userId)
+          && isValidChatMessage(incoming())
+          && incoming().createdAt == request.time
+          && parentUserExists(userId);
+        allow update: if false;
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(messageId)
+          && isOwner(userId)
+          && parentUserExists(userId);
+      }
+
+      // Cognitive Memory Aids: Captioned Photo Memories
+      match /photoMemories/{memoryId} {
+        allow get: if isSignedIn()
+          && isValidId(userId)
+          && isValidId(memoryId)
+          && isOwner(userId);
+        allow list: if isSignedIn()
+          && isOwner(userId)
+          && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(memoryId)
+          && isOwner(userId)
+          && isValidPhotoMemory(incoming())
+          && incoming().createdAt == request.time
+          && parentUserExists(userId);
+        allow update: if false;
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(memoryId)
+          && isOwner(userId)
+          && parentUserExists(userId);
+      }
+
+      // Cognitive Memory Aids: Daily Audio-Confirmed Reminders
+      match /memoryReminders/{reminderId} {
+        allow get: if isSignedIn()
+          && isValidId(userId)
+          && isValidId(reminderId)
+          && isOwner(userId);
+        allow list: if isSignedIn()
+          && isOwner(userId)
+          && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(reminderId)
+          && isOwner(userId)
+          && isValidMemoryReminder(incoming())
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && parentUserExists(userId);
+        allow update: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(reminderId)
+          && isOwner(userId)
+          && isValidMemoryReminder(incoming())
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'notes', 'timeSlot', 'confirmationMessage',
+            'lastCompletedDate', 'lastCompletedTimeLabel', 'updatedAt'
+          ])
+          && parentUserExists(userId);
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(reminderId)
+          && isOwner(userId)
+          && parentUserExists(userId);
+      }
+    }
+
+    // 5. Code-Keyed Non-PII Remote Caregiver Telemetry Links (Zero Enumeration)
+    match /remoteLinks/{accessCode} {
+      allow get: if isSignedIn() && isValidRemoteCode(accessCode);
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && isValidRemoteCode(accessCode)
+        && isValidRemoteLink(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && parentUserExists(request.auth.uid);
+      allow update: if isVerifiedUser()
+        && isValidRemoteCode(accessCode)
+        && existing().ownerId == request.auth.uid
+        && isValidRemoteLink(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'patientAlias', 'lat', 'lng', 'gpsConsentActive',
+          'accidentFreeDays', 'latestStressScore', 'latestMood', 'latestSosStatus',
+          'updatedAt'
+        ])
+        && parentUserExists(request.auth.uid);
+      allow delete: if isVerifiedUser()
+        && isValidRemoteCode(accessCode)
+        && existing().ownerId == request.auth.uid;
+    }
+  }
+}

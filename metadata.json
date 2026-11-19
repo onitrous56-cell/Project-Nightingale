@@ -1,0 +1,6 @@
+{
+  "name": "AbleBridge",
+  "description": "All-in-one accessible Progressive Web App toolkit for vision, hearing, non-verbal speech, cognitive routines, dyslexia reading, motor control, and fall safety.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

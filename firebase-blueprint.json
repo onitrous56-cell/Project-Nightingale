@@ -1,0 +1,541 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Root account document for a signed-in AbleBridge patient or caregiver.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["caregiver", "patient"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "role", "createdAt", "updatedAt"]
+    },
+    "CaregiverProfile": {
+      "title": "CaregiverProfile",
+      "description": "Private patient medical profile, caregiver contacts, avatar, streak, legal confirmation, and accessibility preferences.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "pin": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 4,
+          "pattern": "^[0-9]{4}$"
+        },
+        "fullName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "age": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "bloodType": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "allergiesAndNotes": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "caregiverName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "caregiverPhone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "alertEmail": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "avatarDataUrl": {
+          "type": "string",
+          "maxLength": 100000
+        },
+        "disabilities": {
+          "type": "array",
+          "description": "List of active DisabilityKey identifiers (max 25)."
+        },
+        "enabledModules": {
+          "type": "array",
+          "description": "List of enabled FunctionalModuleId identifiers (1..25)."
+        },
+        "simplifiedMode": {
+          "type": "boolean"
+        },
+        "lowStimulationMode": {
+          "type": "boolean"
+        },
+        "enable3DBackground": {
+          "type": "boolean"
+        },
+        "childFriendlyMode": {
+          "type": "boolean"
+        },
+        "backgroundGuardianEnabled": {
+          "type": "boolean"
+        },
+        "fallGThreshold": {
+          "type": "number"
+        },
+        "inactivitySeconds": {
+          "type": "integer"
+        },
+        "soundThresholdDb": {
+          "type": "integer"
+        },
+        "accidentFreeDays": {
+          "type": "integer"
+        },
+        "streakLastResetIso": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "termsAcceptedAtIso": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "adultCaregiverConfirmed": {
+          "type": "boolean"
+        },
+        "remoteAccessCode": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "theme": {
+          "type": "string",
+          "enum": [
+            "dark",
+            "high-contrast",
+            "cream",
+            "neon",
+            "liquid-glass",
+            "cyber-teal",
+            "calm-lavender",
+            "solar-gold"
+          ]
+        },
+        "textSize": {
+          "type": "string",
+          "enum": ["normal", "xl"]
+        },
+        "voiceSpeed": {
+          "type": "number"
+        },
+        "aiAssistantNickname": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "talkBackEnabled": {
+          "type": "boolean"
+        },
+        "voicePersona": {
+          "type": "string",
+          "enum": [
+            "natural-female",
+            "natural-male",
+            "human-warm",
+            "human-gentle",
+            "robotic",
+            "system"
+          ]
+        },
+        "liveWallpaperType": {
+          "type": "string",
+          "enum": ["aurora-waves", "liquid-glass", "cosmic-orbs", "astrolabe", "off"]
+        },
+        "floatingAiEnabled": {
+          "type": "boolean"
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "enum": ["en-US", "ml-IN", "hi-IN", "ta-IN", "kn-IN", "te-IN", "es-ES", "fr-FR", "ar-SA"]
+        },
+        "smartBatterySaverEnabled": {
+          "type": "boolean"
+        },
+        "batterySaverThreshold": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "pin",
+        "fullName",
+        "age",
+        "bloodType",
+        "allergiesAndNotes",
+        "caregiverName",
+        "caregiverPhone",
+        "alertEmail",
+        "avatarDataUrl",
+        "disabilities",
+        "enabledModules",
+        "simplifiedMode",
+        "lowStimulationMode",
+        "enable3DBackground",
+        "childFriendlyMode",
+        "backgroundGuardianEnabled",
+        "fallGThreshold",
+        "inactivitySeconds",
+        "soundThresholdDb",
+        "accidentFreeDays",
+        "streakLastResetIso",
+        "termsAcceptedAtIso",
+        "adultCaregiverConfirmed",
+        "remoteAccessCode",
+        "theme",
+        "textSize",
+        "voiceSpeed",
+        "aiAssistantNickname",
+        "talkBackEnabled",
+        "voicePersona",
+        "liveWallpaperType",
+        "floatingAiEnabled",
+        "preferredLanguage",
+        "smartBatterySaverEnabled",
+        "batterySaverThreshold",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StressLog": {
+      "title": "StressLog",
+      "description": "Mental status and stress tracking entry recorded by the patient or caregiver.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "stressScore": {
+          "type": "integer"
+        },
+        "mood": {
+          "type": "string",
+          "enum": ["calm", "focused", "anxious", "overwhelmed", "fatigued", "happy", "sad"]
+        },
+        "mentalStatus": {
+          "type": "string",
+          "enum": ["stable", "elevated_stress", "sensory_overload", "panic_risk", "fatigued"]
+        },
+        "triggerNote": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "copingAction": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "stressScore", "mood", "mentalStatus", "triggerNote", "copingAction", "createdAt"]
+    },
+    "SosEvent": {
+      "title": "SosEvent",
+      "description": "Fall Guardian emergency or canceled SOS event with GPS coordinates and impact telemetry.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "peakG": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "canceled", "dispatched"]
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "reason", "peakG", "status", "lat", "lng", "createdAt", "updatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Multi-turn Gemini assistive AI conversation message.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant"]
+        },
+        "persona": {
+          "type": "string",
+          "enum": ["calm_coach", "caregiver_guide", "cognitive_tutor", "accessibility_advisor"]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 6000
+        },
+        "modelUsed": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "role", "persona", "text", "modelUsed", "createdAt"]
+    },
+    "RemoteLink": {
+      "title": "RemoteLink",
+      "description": "Code-keyed live telemetry snapshot (GPS, streak, stress, SOS status) without PII, readable only by signed-in caregivers holding the exact 8-character pair code.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "patientAlias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        },
+        "gpsConsentActive": {
+          "type": "boolean"
+        },
+        "accidentFreeDays": {
+          "type": "integer"
+        },
+        "latestStressScore": {
+          "type": "integer"
+        },
+        "latestMood": {
+          "type": "string",
+          "enum": ["calm", "focused", "anxious", "overwhelmed", "fatigued", "happy", "sad"]
+        },
+        "latestSosStatus": {
+          "type": "string",
+          "enum": ["monitoring", "countdown", "dispatched"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "patientAlias",
+        "lat",
+        "lng",
+        "gpsConsentActive",
+        "accidentFreeDays",
+        "latestStressScore",
+        "latestMood",
+        "latestSosStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PhotoMemory": {
+      "title": "PhotoMemory",
+      "description": "Captioned photo memory card uploaded by caregivers for patients with dementia or learning disabilities.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "caption": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "category": {
+          "type": "string",
+          "enum": ["family", "home", "caregiver", "place", "other"]
+        },
+        "imageDataUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "title", "caption", "category", "imageDataUrl", "createdAt"]
+    },
+    "MemoryReminder": {
+      "title": "MemoryReminder",
+      "description": "Important daily reminder item with audio confirmation message and daily checkoff date.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "timeSlot": {
+          "type": "string",
+          "enum": ["morning", "afternoon", "evening", "anytime"]
+        },
+        "confirmationMessage": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "lastCompletedDate": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "lastCompletedTimeLabel": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "notes",
+        "timeSlot",
+        "confirmationMessage",
+        "lastCompletedDate",
+        "lastCompletedTimeLabel",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "Root account document for an authenticated patient or caregiver."
+    },
+    "/users/{userId}/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/CaregiverProfile" },
+      "description": "Private caregiver profile, disability customization, legal consent, streak, and PIN settings."
+    },
+    "/users/{userId}/stressLogs/{logId}": {
+      "schema": { "$ref": "#/entities/StressLog" },
+      "description": "Private mental status and stress tracking logs."
+    },
+    "/users/{userId}/sosEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/SosEvent" },
+      "description": "Fall and inactivity emergency SOS history."
+    },
+    "/users/{userId}/chatMessages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Synced multi-turn Gemini AI assistant conversation messages."
+    },
+    "/users/{userId}/photoMemories/{memoryId}": {
+      "schema": { "$ref": "#/entities/PhotoMemory" },
+      "description": "Captioned photo memory cards for dementia & learning support."
+    },
+    "/users/{userId}/memoryReminders/{reminderId}": {
+      "schema": { "$ref": "#/entities/MemoryReminder" },
+      "description": "Daily audio-confirmed memory reminders checklist."
+    },
+    "/remoteLinks/{accessCode}": {
+      "schema": { "$ref": "#/entities/RemoteLink" },
+      "description": "Code-keyed live location and wellness telemetry link for remote caregiver portal access."
+    }
+  }
+}
