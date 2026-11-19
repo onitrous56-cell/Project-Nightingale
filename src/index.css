@@ -350,3 +350,19 @@ html[data-battery-saver="true"] .animate-bounce {
   animation: none !important;
 }
 
+/* Startup Outline Extrude Utilities */
+.extrude-stage {
+  perspective: 960px;
+  transform-style: preserve-3d;
+}
+
+.text-outline-extrude {
+  color: transparent;
+  -webkit-text-stroke: 1.75px var(--accent-bg);
+}
+
+.text-outline-extrude-soft {
+  color: transparent;
+  -webkit-text-stroke: 1.25px var(--border-subtle);
+}
+
